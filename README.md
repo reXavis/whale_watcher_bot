@@ -24,13 +24,15 @@ A Discord bot that monitors blockchain liquidity transactions from subgraphs and
 pip install -r requirements.txt
 ```
 
-### 2. Set Discord Token
+### 2. Set Discord Token and set Subgraph URL
 ```bash
 # Linux/Mac
 export DISCORD_TOKEN='your_bot_token_here'
+export SUBGRAPH_URL='your_url_here'
 
 # Windows
 set DISCORD_TOKEN=your_bot_token_here
+set SUBGRAPH_URL=your_url_here
 ```
 
 ### 3. Configure Settings
