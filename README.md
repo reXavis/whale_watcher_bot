@@ -24,15 +24,15 @@ A Discord bot that monitors blockchain liquidity transactions from subgraphs and
 pip install -r requirements.txt
 ```
 
-### 2. Set Discord Token and set Subgraph URL
+### 2. Set Environment Variables
 ```bash
 # Linux/Mac
 export DISCORD_TOKEN='your_bot_token_here'
-export SUBGRAPH_URL='your_url_here'
+export SUBGRAPH_URL='your_subgraph_endpoint_here'
 
 # Windows
 set DISCORD_TOKEN=your_bot_token_here
-set SUBGRAPH_URL=your_url_here
+set SUBGRAPH_URL=your_subgraph_endpoint_here
 ```
 
 ### 3. Configure Settings
@@ -64,11 +64,15 @@ python whale_alert_bot.py
 
 **Required:**
 - `DISCORD_TOKEN`: Your Discord bot token
+- `SUBGRAPH_URL`: The subgraph endpoint URL to monitor
 
 **Optional (.env file):**
 ```bash
 # Discord Bot Token (required)
 DISCORD_TOKEN=your_discord_bot_token_here
+
+# Subgraph URL (required)
+SUBGRAPH_URL=https://api.goldsky.com/api/public/your_subgraph_endpoint
 ```
 
 ### Bot Settings
@@ -106,13 +110,13 @@ REQUEST_DELAY = 2.0              # Delay between API calls
 ## 🛠️ Advanced Configuration
 
 ### Subgraph URL
-The bot monitors a specific subgraph. To change the data source, update:
-```python
-SUBGRAPH_URL = "your_subgraph_endpoint_here"
+The bot monitors a specific subgraph endpoint. Set this via environment variable:
+```bash
+export SUBGRAPH_URL="https://api.goldsky.com/api/public/your_subgraph_endpoint"
 ```
 
 ### Rate Limiting
-Adjust these settings if experiencing API issues:
+Adjust these settings if experiencing API issues by editing `whale_alert_bot.py`:
 ```python
 REQUEST_DELAY = 2.0    # Seconds between requests
 RETRY_DELAY = 60       # Seconds to wait when rate limited
@@ -122,6 +126,7 @@ BATCH_SIZE = 25        # Transactions per request
 ## 🚦 Error Handling
 
 The bot includes robust error handling for:
+- Missing environment variables (Discord token, subgraph URL)
 - Discord connection issues
 - Subgraph API rate limits  
 - Network timeouts
