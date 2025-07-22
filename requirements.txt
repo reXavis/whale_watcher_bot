@@ -1,0 +1,4 @@
+# Dependencies for whale_alert_bot.py
+requests>=2.31.0
+discord.py>=2.3.0
+pandas>=2.0.0 
