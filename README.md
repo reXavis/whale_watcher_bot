@@ -97,7 +97,7 @@ REQUEST_DELAY = 2.0              # Delay between API calls
 
 ```
 🐋 WHALE ALERT!
-💰 $25,340.50 MINT
+💰 $25,340.50 ADD
 📊 Pool: ETH/USDC  
 ⏰ Time: 2025-07-22 19:30:45 UTC
 ```
