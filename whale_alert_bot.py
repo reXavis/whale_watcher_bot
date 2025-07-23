@@ -1,12 +1,13 @@
 """
 Large Transaction Alert Discord Bot
 
-Monitors a subgraph for large liquidity transactions (mints/burns) and sends 
+Monitors a subgraph for large liquidity transactions (adds/withdrawals) and sends 
 Discord alerts for different tiers of whale activity.
 
 Setup Instructions:
-- See SETUP.md for detailed configuration guide
+- See README.md for detailed configuration guide
 - Set DISCORD_TOKEN environment variable
+- Set SUBGRAPH_URL environment variable
 - Configure CHANNEL_ID and thresholds below
 - Run: python whale_alert_bot.py
 
@@ -41,7 +42,7 @@ ORC_THRESHOLD_USD = 50000.0      # Orc: $50k+
 POLL_INTERVAL = 15  # seconds between checks (increased to avoid rate limits)
 
 # Subgraph Configuration
-SUBGRAPH_URL = "https://api.goldsky.com/api/public/project_cmdd80fbzh7kn01uo0rt93681/subgraphs/poap-subgraph/1.0.0/gn"
+SUBGRAPH_URL = os.getenv('SUBGRAPH_URL')
 LARGE_TX_CSV_FILE = "large_transactions.csv"  # CSV for all large transactions (dolphins, whales, orcs)
 REQUEST_DELAY = 2.0  # seconds between requests to avoid rate limiting (increased)
 BATCH_SIZE = 25  # smaller batches for frequent polling (reduced)
@@ -313,7 +314,7 @@ class LargeTxAlertBot(discord.Client):
             whale_count = 0 
             orc_count = 0
             
-            # Fetch new mints
+            # Fetch new liquidity additions (mints)
             mint_events = await fetch_events_batch(MINTS_QUERY, self.last_mint_timestamp, 'Mint')
             for mint in mint_events:
                 total_transactions += 1
@@ -324,10 +325,10 @@ class LargeTxAlertBot(discord.Client):
                 
                 if alert_tier:
                     # Log large transaction to CSV
-                    log_large_tx_to_csv('Mint', mint, mint['transaction'], alert_tier)
+                    log_large_tx_to_csv('Add', mint, mint['transaction'], alert_tier)
                     
                     # Send Discord alert
-                    await self.send_whale_alert('Mint', mint, mint['transaction'])
+                    await self.send_whale_alert('Add', mint, mint['transaction'])
                     large_tx_alerts += 1
                     
                     # Count by tier
@@ -341,12 +342,12 @@ class LargeTxAlertBot(discord.Client):
                 # Update timestamp
                 self.last_mint_timestamp = max(self.last_mint_timestamp, int(mint['timestamp']))
             
-            # Delay between mint and burn requests to respect rate limits
+            # Delay between liquidity addition and withdrawal requests to respect rate limits
             if mint_events:
-                print(f"🔍 Found {len(mint_events)} new mints, waiting {REQUEST_DELAY}s before checking burns...")
+                print(f"🔍 Found {len(mint_events)} new liquidity additions, waiting {REQUEST_DELAY}s before checking withdrawals...")
                 await asyncio.sleep(REQUEST_DELAY)
             
-            # Fetch new burns
+            # Fetch new liquidity withdrawals (burns)
             burn_events = await fetch_events_batch(BURNS_QUERY, self.last_burn_timestamp, 'Burn')
             for burn in burn_events:
                 total_transactions += 1
@@ -357,10 +358,10 @@ class LargeTxAlertBot(discord.Client):
                 
                 if alert_tier:
                     # Log large transaction to CSV
-                    log_large_tx_to_csv('Burn', burn, burn['transaction'], alert_tier)
+                    log_large_tx_to_csv('Withdraw', burn, burn['transaction'], alert_tier)
                     
                     # Send Discord alert
-                    await self.send_whale_alert('Burn', burn, burn['transaction'])
+                    await self.send_whale_alert('Withdraw', burn, burn['transaction'])
                     large_tx_alerts += 1
                     
                     # Count by tier
@@ -386,7 +387,7 @@ class LargeTxAlertBot(discord.Client):
                 
                 print(f"📈 Scanned {total_transactions} transactions → {large_tx_alerts} alerts ({', '.join(tier_breakdown)})")
             elif mint_events or burn_events:
-                print(f"🔍 Checked {len(mint_events)} mints + {len(burn_events)} burns → no large transactions")
+                print(f"🔍 Checked {len(mint_events)} additions + {len(burn_events)} withdrawals → no large transactions")
             
         except Exception as e:
             print(f"Error in monitor_transactions: {e}")
@@ -411,6 +412,15 @@ def main():
         print("=" * 50)
         return
     
+    if not SUBGRAPH_URL:
+        print("❌ ERROR: Subgraph URL not found!")
+        print("Please set the SUBGRAPH_URL environment variable:")
+        print("  Linux/Mac: export SUBGRAPH_URL='your_subgraph_url_here'")
+        print("  Windows: set SUBGRAPH_URL=your_subgraph_url_here")
+        print("  Or create a .env file with: SUBGRAPH_URL=your_subgraph_url_here")
+        print("=" * 50)
+        return
+
     print(f"Discord Channel ID: {CHANNEL_ID}")
     print(f"Alert Tiers:")
     print(f"  🐬 Dolphin: ${DOLPHIN_THRESHOLD_USD:,.2f} - ${WHALE_THRESHOLD_USD-0.01:,.2f}")
